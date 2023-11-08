@@ -15,7 +15,7 @@ public class GetApplicationsByStatusCommandHandler(AppDbContext appDbContext)
     private readonly AppDbContext _appDbContext = appDbContext;
 
     public async Task<IEnumerable<ApplicationResponse>> Handle(
-        GetApplicationsByStatusCommand request, 
+        GetApplicationsByStatusCommand request,
         CancellationToken cancellationToken)
     {
         if (Enum.TryParse(request.Status, true, out StatusEnum status))
@@ -24,8 +24,8 @@ public class GetApplicationsByStatusCommandHandler(AppDbContext appDbContext)
                 .Include(a => a.User)
                 .Include(a => a.Master)
                 .AsNoTracking()
-                .AsEnumerable()
                 .Where(a => a.CurrentStatus == status.ToString())
+                .AsEnumerable()
                 .Select(a =>
                 {
                     var result = a.Adapt<ApplicationResponse>();
@@ -34,7 +34,7 @@ public class GetApplicationsByStatusCommandHandler(AppDbContext appDbContext)
                     return result;
                 });
         }
-        
+
         throw new UserFriendlyException(400, "Wrong status");
     }
 }

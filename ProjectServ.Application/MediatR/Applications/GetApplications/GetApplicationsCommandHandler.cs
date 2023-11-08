@@ -21,40 +21,32 @@ public class GetApplicationsCommandHandler(
     {
         var userId = _userAccessorService.UserId;
         var role = _userAccessorService.Role;
-        
+
+        var query = _appDbContext.Applications
+            .Include(a => a.User)
+            .Include(a => a.Master)
+            .AsNoTracking();
+
         switch (role)
         {
             case RoleEnum.User:
-                return _appDbContext.Applications
-                    .Include(a => a.User)
-                    .Include(a => a.Master)
-                    .AsNoTracking()
-                    .AsEnumerable()
-                    .Where(a => a.UserId == userId)
-                    .Select(a =>
-                    {
-                        var result = a.Adapt<ApplicationResponse>();
-                        result.UserName = a.User.UserName!;
-                        result.MasterName = a.Master?.UserName;
-                        return result;
-                    });
-            
+                query = query.Where(a => a.UserId == userId);
+                break;
+
             case RoleEnum.Master:
-                return _appDbContext.Applications
-                    .Include(a => a.User)
-                    .Include(a => a.Master)
-                    .AsNoTracking()
-                    .AsEnumerable()
-                    .Where(a => a.MasterId == userId)
-                    .Select(a =>
-                    {
-                        var result = a.Adapt<ApplicationResponse>();
-                        result.UserName = a.User.UserName!;
-                        result.MasterName = a.Master?.UserName;
-                        return result;
-                    });
+                query = query.Where(a => a.MasterId == userId);
+                break;
+
             default:
                 throw new UserFriendlyException(403, "Access denied");
         }
+
+        return query.AsEnumerable().Select(a =>
+        {
+            var result = a.Adapt<ApplicationResponse>();
+            result.UserName = a.User.UserName!;
+            result.MasterName = a.Master?.UserName;
+            return result;
+        }).ToList();
     }
 }

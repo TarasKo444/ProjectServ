@@ -13,6 +13,6 @@ public class GetUsersCommandHandler(AppDbContext appDbContext) : IRequestHandler
 
     public async Task<IEnumerable<UserModel>> Handle(GetUsersCommand request, CancellationToken cancellationToken)
     {
-        return _appDbContext.Users.AsNoTracking().Select(u => u.Adapt<UserModel>());
+        return _appDbContext.Users.AsNoTracking().ProjectToType<UserModel>();
     }
 }
